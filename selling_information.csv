@@ -1,0 +1,16 @@
+transaction_id,timestamp,customer_id,product_name,quantity,unit_price,category,total_price
+TXN001,2024-01-15 10:30:00,CUST001,iPhone 15 Pro,1,1199.99,Electronics,1199.99
+TXN002,2024-01-15 11:00:00,CUST002,MacBook Air M3,1,1299.00,Electronics,1299.00
+TXN003,2024-01-15 12:15:00,CUST001,AirPods Pro,2,249.99,Electronics,499.98
+TXN004,2024-01-15 14:30:00,CUST003,iPad Air,1,699.00,Electronics,699.00
+TXN005,2024-01-15 15:45:00,CUST002,Magic Keyboard,1,129.99,Accessories,129.99
+TXN006,2024-01-16 09:20:00,CUST004,Samsung Galaxy S24,1,899.99,Electronics,899.99
+TXN007,2024-01-16 10:15:00,CUST005,Dell XPS 13,1,1499.00,Electronics,1499.00
+TXN008,2024-01-16 11:30:00,CUST003,Wireless Mouse,3,29.99,Accessories,89.97
+TXN009,2024-01-16 13:45:00,CUST006,Coffee Maker,1,199.99,Appliances,199.99
+TXN010,2024-01-16 16:20:00,CUST001,Bluetooth Speaker,2,79.99,Electronics,159.98
+TXN011,2024-01-17 08:15:00,CUST007,Gaming Chair,1,299.99,Furniture,299.99
+TXN012,2024-01-17 09:30:00,CUST002,Monitor 27inch,1,449.99,Electronics,449.99
+TXN013,2024-01-17 11:00:00,CUST008,Espresso Machine,1,599.99,Appliances,599.99
+TXN014,2024-01-17 14:15:00,CUST004,Wireless Headphones,1,179.99,Electronics,179.99
+TXN015,2024-01-17 16:45:00,CUST009,Standing Desk,1,399.99,Furniture,399.99
