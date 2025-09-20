@@ -9,15 +9,10 @@ class StoreInsights {
     // Bind event listeners
     bindEvents() {
         const connectBtn = document.getElementById('connect-cameras');
-        const simulateBtn = document.getElementById('simulate-data');
         const testBtn = document.getElementById('test-connection');
         
         if (connectBtn) {
             connectBtn.addEventListener('click', () => this.handleConnect());
-        }
-        
-        if (simulateBtn) {
-            simulateBtn.addEventListener('click', () => this.handleSimulate());
         }
         
         if (testBtn) {
@@ -53,13 +48,6 @@ class StoreInsights {
         } catch (error) {
             this.showMessage('Connection failed: ' + error.message, 'error');
         }
-    }
-    
-    // Handle simulate data button
-    handleSimulate() {
-        const result = this.monitoringAPI.enableSimulation();
-        this.showMessage(result.message, 'success');
-        this.updateSummaryCards();
     }
     
     // Handle test connection button
