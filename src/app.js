@@ -114,6 +114,14 @@ class RetailAnalysisApp {
             await this.dataManagement.generateSampleData();
         } else {
             console.log('Data loaded from local storage successfully');
+            // Verify data integrity - check if we have complete data structure
+            if (this.dataProcessor.transactions.length === 0 || 
+                this.dataProcessor.customers.length === 0 || 
+                this.dataProcessor.inventory.length === 0) {
+                console.log('Local storage data appears incomplete, regenerating sample data...');
+                localStorage.removeItem('retail_analysis_data'); // Clear corrupted data
+                await this.dataManagement.generateSampleData();
+            }
         }
     }
     

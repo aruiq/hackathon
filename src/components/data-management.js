@@ -178,26 +178,42 @@ class DataManagement {
             this.showError('Please select a CSV file first');
             return;
         }
-        
+
+        console.log('Starting CSV file upload:', file.name, 'Size:', file.size, 'bytes');
         this.showLoading(true, 'Processing CSV file...');
         
         try {
             const csvText = await this.readFileAsText(file);
+            console.log('CSV file read successfully, length:', csvText.length);
+            console.log('First 200 characters:', csvText.substring(0, 200));
+            
             const parsedData = await this.parseCSVData(csvText);
+            console.log('CSV parsing completed, data structure:', parsedData);
+
+            // 验证数据完整性
+            if (!parsedData.transactions || parsedData.transactions.length === 0) {
+                throw new Error('No valid transactions found in CSV file');
+            }
             
             // 加载数据到处理器
+            console.log('Loading data into processor...');
             this.dataProcessor.loadData(parsedData);
             
             // 存储到本地
+            console.log('Saving data to local storage...');
             this.saveDataToLocalStorage(parsedData);
+            
+            // 更新预览
+            this.previewData(parsedData);
             
             // 更新数据信息
             this.showCurrentDataInfo();
             
             // 触发全局数据更新事件
+            console.log('Triggering global data update event...');
             window.dispatchEvent(new CustomEvent('dataUpdated', { detail: parsedData }));
             
-            this.showSuccess(`CSV file uploaded successfully! Processed ${parsedData.transactions.length} transaction records.`);
+            this.showSuccess(`CSV file uploaded successfully! Processed ${parsedData.transactions.length} transaction records, ${parsedData.customers.length} customers, ${parsedData.inventory.length} products.`);
             
         } catch (error) {
             console.error('CSV file processing failed:', error);
@@ -237,11 +253,17 @@ class DataManagement {
                 if (missingColumns.length > 0) {
                     throw new Error(`Missing required columns: ${missingColumns.join(', ')}`);
                 }
+
+                console.log('CSV Headers found:', headers);
+                console.log('Processing', lines.length - 1, 'data rows...');
                 
                 // 解析数据行
                 for (let i = 1; i < lines.length; i++) {
                     const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-                    if (values.length !== headers.length) continue;
+                    if (values.length !== headers.length) {
+                        console.warn(`Skipping row ${i} - column count mismatch:`, values);
+                        continue;
+                    }
                     
                     const row = {};
                     headers.forEach((header, index) => {
@@ -260,31 +282,112 @@ class DataManagement {
                                 products.set(item.product_name, {
                                     product_name: item.product_name,
                                     category: item.category || 'Unknown',
-                                    current_stock: 100, // 默认库存
+                                    current_stock: Math.floor(Math.random() * 100) + 50, // 随机库存50-150
                                     reorder_level: 20,
-                                    unit_cost: item.unit_price * 0.6, // 假设成本为售价的60%
-                                    unit_price: item.unit_price
+                                    unit_cost: item.unit_price * (0.5 + Math.random() * 0.2), // 成本为售价的50-70%
+                                    unit_price: item.unit_price,
+                                    supplier: 'CSV Import',
+                                    last_updated: new Date().toISOString()
                                 });
                             }
                         });
                     }
                 }
+
+                console.log('CSV parsing completed:', {
+                    transactions: transactions.length,
+                    customers: customers.size,
+                    products: products.size
+                });
+
+                // 生成更完整的客户信息
+                const customerList = Array.from(customers).map(id => {
+                    const customerTransactions = transactions.filter(t => t.customer_id === id);
+                    const totalSpent = customerTransactions.reduce((sum, t) => sum + t.total_amount, 0);
+                    const avgOrderValue = totalSpent / customerTransactions.length;
+                    
+                    // 根据消费金额确定客户等级
+                    let tier = 'Bronze';
+                    if (totalSpent > 2000) tier = 'VIP';
+                    else if (totalSpent > 1000) tier = 'Gold';
+                    else if (totalSpent > 500) tier = 'Silver';
+
+                    // 生成更真实的客户信息
+                    const customerNumber = id.replace('CUST_', '');
+                    const firstNames = ['Alex', 'Sam', 'Jordan', 'Taylor', 'Casey', 'Riley', 'Morgan', 'Avery', 'Quinn', 'Blake', 'Cameron', 'Dakota', 'Emery', 'Finley', 'Hayden', 'Jamie', 'Logan', 'Parker', 'Reese', 'Sage'];
+                    const lastNames = ['Smith', 'Johnson', 'Brown', 'Davis', 'Wilson', 'Anderson', 'Taylor', 'White', 'Garcia', 'Martinez', 'Rodriguez', 'Lewis', 'Lee', 'Walker', 'Hall', 'Allen', 'Young', 'King', 'Wright', 'Lopez'];
+                    
+                    const firstName = firstNames[parseInt(customerNumber) % firstNames.length];
+                    const lastName = lastNames[(parseInt(customerNumber) + 7) % lastNames.length];
+                    const fullName = `${firstName} ${lastName}`;
+
+                    return {
+                        customer_id: id,
+                        name: fullName,
+                        email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@email.com`,
+                        phone: `+61${Math.floor(Math.random() * 900000000) + 100000000}`,
+                        registration_date: new Date(Date.now() - Math.floor(Math.random() * 365 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+                        tier: tier,
+                        total_spent: Math.round(totalSpent * 100) / 100,
+                        transaction_count: customerTransactions.length,
+                        avg_order_value: Math.round(avgOrderValue * 100) / 100,
+                        lifecycle_days: Math.floor(Math.random() * 365) + 30,
+                        loyalty_points: Math.floor(totalSpent / 10)
+                    };
+                });
+
+                // 为每个产品生成完整的库存信息，包含成本数据
+                const inventoryList = Array.from(products.values()).map(product => {
+                    // 根据产品类型估算成本比例
+                    let costRatio = 0.6; // 默认成本为售价的60%
+                    if (product.category === 'Electric Guitars' || product.category === 'Bass Guitars') {
+                        costRatio = 0.65; // 吉他类成本较高
+                    } else if (product.category === 'Accessories') {
+                        costRatio = 0.4; // 配件成本较低
+                    } else if (product.category === 'Effects Pedals') {
+                        costRatio = 0.55; // 效果器成本中等
+                    }
+
+                    const unitCost = Math.round(product.unit_price * costRatio * 100) / 100;
+                    
+                    return {
+                        product_name: product.product_name,
+                        category: product.category,
+                        current_stock: Math.floor(Math.random() * 50) + 10, // 乐器店库存10-60件
+                        reorder_level: Math.floor(Math.random() * 10) + 3, // 重订购点3-12件
+                        unit_cost: unitCost,
+                        unit_price: product.unit_price,
+                        supplier: this.getSupplierForCategory(product.category),
+                        last_updated: new Date().toISOString(),
+                        // 乐器特有属性
+                        brand: this.extractBrand(product.product_name),
+                        condition: 'New',
+                        warranty_months: this.getWarrantyForCategory(product.category)
+                    };
+                });
                 
                 // 构建完整数据集
                 const result = {
                     transactions: transactions,
-                    customers: Array.from(customers).map(id => ({
-                        customer_id: id,
-                        name: `Customer ${id}`,
-                        email: `${id}@email.com`
-                    })),
-                    inventory: Array.from(products.values()),
+                    customers: customerList,
+                    inventory: inventoryList,
                     metadata: {
                         imported_at: new Date().toISOString(),
                         source: 'csv_import',
-                        transaction_count: transactions.length
+                        transaction_count: transactions.length,
+                        date_range: {
+                            start: transactions.length > 0 ? Math.min(...transactions.map(t => new Date(t.timestamp).getTime())) : null,
+                            end: transactions.length > 0 ? Math.max(...transactions.map(t => new Date(t.timestamp).getTime())) : null
+                        }
                     }
                 };
+
+                console.log('Final dataset structure:', {
+                    transactions: result.transactions.length,
+                    customers: result.customers.length,
+                    inventory: result.inventory.length,
+                    metadata: result.metadata
+                });
                 
                 resolve(result);
                 
@@ -293,31 +396,90 @@ class DataManagement {
             }
         });
     }
+
+    // 获取产品类别对应的供应商
+    getSupplierForCategory(category) {
+        const suppliers = {
+            'Electric Guitars': 'Fender Music Australia',
+            'Bass Guitars': 'Music Link Australia',
+            'Keyboards': 'Yamaha Music Australia',
+            'Drums': 'Pearl Drums Australia',
+            'Amplifiers': 'Marshall Amplification',
+            'Audio Equipment': 'Shure Australia',
+            'Effects Pedals': 'Boss/Roland Australia',
+            'Acoustic Guitars': 'Taylor Guitars Australia',
+            'Accessories': 'D\'Addario Australia'
+        };
+        return suppliers[category] || 'Music Store Wholesale';
+    }
+
+    // 从产品名称提取品牌
+    extractBrand(productName) {
+        const brands = ['Fender', 'Gibson', 'Yamaha', 'Pearl', 'Boss', 'Shure', 'Ibanez', 'Marshall', 'Roland', 'Taylor', 'Martin', 'PRS', 'ESP', 'Gretsch', 'Epiphone', 'Rickenbacker', 'Music Man', 'Warwick', 'Schecter', 'Chapman'];
+        for (const brand of brands) {
+            if (productName.includes(brand)) {
+                return brand;
+            }
+        }
+        return 'Various';
+    }
+
+    // 获取产品类别对应的保修期
+    getWarrantyForCategory(category) {
+        const warranty = {
+            'Electric Guitars': 24,
+            'Bass Guitars': 24,
+            'Keyboards': 12,
+            'Drums': 24,
+            'Amplifiers': 12,
+            'Audio Equipment': 24,
+            'Effects Pedals': 12,
+            'Acoustic Guitars': 24,
+            'Accessories': 6
+        };
+        return warranty[category] || 12;
+    }
     
     // 从CSV行构建交易记录
     buildTransactionFromCSV(row) {
         try {
+            // 解析时间戳
+            let timestamp;
+            try {
+                timestamp = new Date(row.timestamp).toISOString();
+                // 检查是否是有效日期
+                if (isNaN(new Date(timestamp).getTime())) {
+                    throw new Error('Invalid date');
+                }
+            } catch (e) {
+                // 如果时间戳格式有问题，使用当前时间
+                console.warn('Invalid timestamp format, using current time:', row.timestamp);
+                timestamp = new Date().toISOString();
+            }
+
+            const quantity = parseInt(row.quantity) || 1;
+            const unitPrice = parseFloat(row.unit_price) || 0;
+            const totalPrice = row.total_price ? parseFloat(row.total_price) : (quantity * unitPrice);
+
             const transaction = {
-                transaction_id: row.transaction_id,
-                timestamp: new Date(row.timestamp).toISOString(),
-                customer_id: row.customer_id,
+                transaction_id: row.transaction_id || `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                timestamp: timestamp,
+                customer_id: row.customer_id || `CUST_${Math.random().toString(36).substr(2, 9)}`,
                 items: [{
-                    product_name: row.product_name,
+                    product_name: row.product_name || 'Unknown Product',
                     category: row.category || 'Unknown',
-                    quantity: parseInt(row.quantity) || 1,
-                    unit_price: parseFloat(row.unit_price) || 0,
-                    total_price: 0
+                    quantity: quantity,
+                    unit_price: unitPrice,
+                    total_price: totalPrice
                 }],
-                total_amount: 0
+                total_amount: totalPrice
             };
-            
-            // 计算总价
-            transaction.items[0].total_price = transaction.items[0].quantity * transaction.items[0].unit_price;
-            transaction.total_amount = transaction.items[0].total_price;
-            
+
+            // 添加调试日志
+            console.log('Parsed transaction:', transaction);
             return transaction;
         } catch (error) {
-            console.warn('Skipping invalid CSV row:', row);
+            console.warn('Skipping invalid CSV row:', row, 'Error:', error);
             return null;
         }
     }
