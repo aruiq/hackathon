@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Australian MSME Retail Analytics SaaS Platform</title>
+    <link rel="stylesheet" href="../src/styles/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <header class="header">
+            <div class="container">
+                <h1 class="logo">🇦🇺 Retail Analytics</h1>
+                <nav class="nav">
+                    <button class="nav-btn active" data-view="dashboard">Dashboard</button>
+                    <button class="nav-btn" data-view="products">Products</button>
+                    <button class="nav-btn" data-view="customers">Customers</button>
+                    <button class="nav-btn" data-view="inventory">Inventory</button>
+                    <button class="nav-btn" data-view="costs">Costs</button>
+                    <button class="nav-btn" data-view="hotspots">Store Insights</button>
+                    <button class="nav-btn" data-view="reports">AI Reports</button>
+                    <button class="nav-btn" data-view="data">Data Management</button>
+                </nav>
+            </div>
+        </header>
+
+        <main class="main">
+            <div class="container">
+                <!-- Dashboard View -->
+                <div id="dashboard-view" class="view active">
+                    <div class="dashboard-header">
+                        <h2>Real-time Dashboard</h2>
+                        <div class="date-selector">
+                            <input type="date" id="start-date" value="2024-12-01">
+                            <span>to</span>
+                            <input type="date" id="end-date" value="2024-12-07">
+                            <button id="refresh-btn">Refresh</button>
+                        </div>
+                    </div>
+
+                    <!-- Key Performance Indicators -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-icon">💰</div>
+                            <div class="metric-content">
+                                <h3>Daily Sales</h3>
+                                <div class="metric-value" id="daily-sales">$0</div>
+                                <div class="metric-change positive" id="sales-change">+0%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-card">
+                            <div class="metric-icon">👥</div>
+                            <div class="metric-content">
+                                <h3>Customer Traffic</h3>
+                                <div class="metric-value" id="customer-count">0</div>
+                                <div class="metric-change" id="customer-change">+0%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-card">
+                            <div class="metric-icon">🛒</div>
+                            <div class="metric-content">
+                                <h3>Avg. Order Value</h3>
+                                <div class="metric-value" id="avg-order-value">$0</div>
+                                <div class="metric-change" id="aov-change">+0%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-card">
+                            <div class="metric-icon">⭐</div>
+                            <div class="metric-content">
+                                <h3>Trending Items</h3>
+                                <div class="metric-value" id="hot-products">0</div>
+                                <div class="metric-change" id="hot-change">+0%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Charts -->
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <h3>7-Day Sales Trend</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="sales-trend-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <h3>Product Category Distribution</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="category-pie-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <h3>Hourly Sales Heatmap</h3>
+                            <div id="heatmap-container"></div>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <h3>Top 5 Bestsellers</h3>
+                            <div id="top-products-list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products Analysis View -->
+                <div id="products-view" class="view">
+                    <h2>Product Analysis</h2>
+                    <div class="analysis-content">
+                        <div class="analysis-tabs">
+                            <button class="tab-btn active" data-tab="ranking">Sales Ranking</button>
+                            <button class="tab-btn" data-tab="repurchase">Repurchase Rate</button>
+                            <button class="tab-btn" data-tab="correlation">Product Correlation</button>
+                        </div>
+                        <div id="products-content"></div>
+                    </div>
+                </div>
+
+                <!-- Customer Analysis View -->
+                <div id="customers-view" class="view">
+                    <h2>Customer Analysis</h2>
+                    <div id="customers-content"></div>
+                </div>
+
+                <!-- Inventory Analysis View -->
+                <div id="inventory-view" class="view">
+                    <h2>Inventory Analysis</h2>
+                    <div id="inventory-content"></div>
+                </div>
+
+                <!-- Cost Analysis View -->
+                <div id="costs-view" class="view">
+                    <h2>Cost Analysis</h2>
+                    <div id="costs-content"></div>
+                </div>
+
+                <!-- Store Insights View -->
+                <div id="hotspots-view" class="view">
+                    <h2>Store Insights & Hotspots</h2>
+                    <div class="store-insights">
+                        <div class="monitoring-controls">
+                            <h3>📹 Camera Monitoring Integration</h3>
+                            <div class="monitoring-status">
+                                <div class="status-indicator" id="camera-status">
+                                    <span class="status-dot offline"></span>
+                                    <span class="status-text">Camera System: Offline</span>
+                                </div>
+                                <button id="connect-cameras" class="btn-primary">Connect Cameras</button>
+                                <button id="simulate-data" class="btn-secondary">Simulate Data</button>
+                            </div>
+                        </div>
+                        
+                        <div class="hotspot-analytics">
+                            <div class="hotspot-summary">
+                                <div class="summary-card">
+                                    <h4>Total Zones Monitored</h4>
+                                    <div class="summary-value" id="total-zones">8</div>
+                                </div>
+                                <div class="summary-card">
+                                    <h4>Active Hotspots</h4>
+                                    <div class="summary-value" id="active-hotspots">3</div>
+                                </div>
+                                <div class="summary-card">
+                                    <h4>Avg. Dwell Time</h4>
+                                    <div class="summary-value" id="avg-dwell-time">2.5m</div>
+                                </div>
+                                <div class="summary-card">
+                                    <h4>Peak Traffic Hour</h4>
+                                    <div class="summary-value" id="peak-hour">2-3 PM</div>
+                                </div>
+                            </div>
+                            
+                            <div class="store-layout">
+                                <h3>Store Layout & Heat Zones</h3>
+                                <div id="store-heatmap" class="store-map">
+                                    <!-- This will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            
+                            <div class="hotspot-details">
+                                <h3>Hotspot Analysis</h3>
+                                <div id="hotspot-list" class="hotspot-table-container">
+                                    <!-- This will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Reports View -->
+                <div id="reports-view" class="view">
+                    <h2>AI Analytics Reports</h2>
+                    <div class="reports-controls">
+                        <button id="generate-weekly-report">Generate Weekly Report</button>
+                        <button id="generate-monthly-report">Generate Monthly Report</button>
+                    </div>
+                    <div id="ai-reports-content"></div>
+                </div>
+
+                <!-- Data Management View -->
+                <div id="data-view" class="view">
+                    <h2>Data Management</h2>
+                    <div class="data-management">
+                        <div class="upload-section">
+                            <h3>Import Sales Data</h3>
+                            <input type="file" id="csv-file" accept=".csv" />
+                            <button id="upload-btn">Upload CSV</button>
+                        </div>
+                        <div class="monitoring-section">
+                            <h3>Camera & Sensor Integration</h3>
+                            <div class="api-endpoint">
+                                <label>Monitoring API Endpoint:</label>
+                                <input type="text" id="monitoring-api" placeholder="http://your-camera-system.local/api/zones" />
+                                <button id="test-connection">Test Connection</button>
+                            </div>
+                            <div class="integration-status">
+                                <p>Status: <span id="integration-status">Not Connected</span></p>
+                                <p>Last Update: <span id="last-update">Never</span></p>
+                            </div>
+                        </div>
+                        <div class="data-preview">
+                            <h3>Data Preview</h3>
+                            <div id="data-preview-table"></div>
+                        </div>
+                        <button id="generate-sample-data">Generate Sample Data</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="loading" class="loading hidden">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Analyzing data...</div>
+    </div>
+
+    <script src="../src/data/sample-data.js"></script>
+    <script src="../src/utils/data-processor.js"></script>
+    <script src="../src/utils/chart-utils.js"></script>
+    <script src="../src/utils/monitoring-api.js"></script>
+    <script src="../src/components/dashboard.js"></script>
+    <script src="../src/components/data-management.js"></script>
+    <script src="../src/components/store-insights.js"></script>
+    <script src="../src/app.js"></script>
+</body>
+</html>
