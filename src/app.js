@@ -105,24 +105,13 @@ class RetailAnalysisApp {
     async loadInitialData() {
         console.log('Attempting to load initial data...');
         
-        // First try to load from local storage
-        const hasLocalData = this.dataManagement.loadDataFromLocalStorage();
+        // 强制清除本地存储，确保显示新的初始数据
+        console.log('Clearing local storage to show fresh initial data...');
+        localStorage.removeItem('retail_analysis_data');
         
-        if (!hasLocalData) {
-            console.log('No local data found, generating sample data...');
-            // If no local data, generate sample data
-            await this.dataManagement.generateSampleData();
-        } else {
-            console.log('Data loaded from local storage successfully');
-            // Verify data integrity - check if we have complete data structure
-            if (this.dataProcessor.transactions.length === 0 || 
-                this.dataProcessor.customers.length === 0 || 
-                this.dataProcessor.inventory.length === 0) {
-                console.log('Local storage data appears incomplete, regenerating sample data...');
-                localStorage.removeItem('retail_analysis_data'); // Clear corrupted data
-                await this.dataManagement.generateSampleData();
-            }
-        }
+        // Always generate fresh sample data
+        console.log('Generating fresh sample data for initialization...');
+        await this.dataManagement.generateSampleData();
     }
     
     // Show view
